@@ -2,6 +2,8 @@ import random as r
 
 import genetic
 
+POPULATION_SIZE = 10
+GAMES_TO_PLAY = 10
 BET_AMOUNT = 10
 SAMPLE_DECK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K']
 
@@ -28,6 +30,7 @@ class Dealer:
 
         # Допоміжні змінні
         self.stand = False
+        self.made_turn = False
 
 
 class Table:
@@ -58,6 +61,7 @@ class Table:
         #Допоміжні змінні
         self.player_bet = 0
         self.splitted = False
+        self.dealer_busted = False
 
     def deal_cards(self):
         self.player.hand = []
@@ -68,11 +72,14 @@ class Table:
         self.dealer.stand = False
         self.splitted = False
         self.player.surrended = False
+        # self.dealer_busted = False
+        self.dealer.made_turn = False
         for i in range(2):
             self.player.hand.append(self.deck.pop(r.randint(0, len(self.deck)-1)))
             self.dealer.hand.append(self.deck.pop(r.randint(0, len(self.deck)-1)))
         self.count_points(self.player)
         self.count_points(self.dealer)
+        print(self.player.hand)
 
     def count_points(self, person):
         person.points = [0, 0]
@@ -138,15 +145,15 @@ class Table:
     def show_choice(self, action):
         """pass"""
         if action == 1:
-            print('hit')
+            print('player hits')
         elif action == 2:
-            print('stand')
+            print('player stands')
         elif action == 3:
-            print('double down')
+            print('player doubling down')
         elif action == 4:
-            print('surrender')
+            print('player surrenders')
         elif action == 5:
-            print('split')
+            print('player splits')
 
     def win(self):
         self.player.money += self.player_bet * 2
@@ -161,11 +168,66 @@ class Table:
         print('blackjack')
 
     def draw(self):
-        self.player.money += self.player_bet
+        if not self.splitted:
+            self.player.money += self.player_bet
+        else:
+            self.player.money += self.player_bet / 2
         print('draw')
 
     def sur(self):
         print('surrender')
+
+
+
+    def play_split_game(self):
+        self.player.hand = self.player.buffer_hand
+        self.hit(self.player)
+        self.player.stand = False
+
+        # Перевірка по другому рівню хромосом
+        while not self.player.stand:
+            # Перевірка на перебір + підрахунок очок
+            self.count_points(self.player)
+            if self.player.points[0] < 22 and self.player.points[1] < 22:
+                point_index = r.randint(0, 1)
+            else:
+                point_index = self.player.points.index(min(self.player.points))
+                if self.player.points[point_index] > 21:
+                    return self.busted()
+
+            # Прийняття рішення
+            card_index_3 = self.player.points[point_index]
+            action = self.player.genome.second_layer[card_index_3 - 1]
+            self.show_choice(action)
+            self.make_choice(action)
+            if self.player.points[0] > 21 and self.player.points[1] > 21:
+                return self.busted()
+
+        if self.player.surrended:
+            return self.sur()
+        if self.player.points[0] > 21 and self.player.points[1] > 21:
+            return self.busted()
+
+        if not self.dealer.made_turn:
+            # Хід дилера
+            self.made_turn = True
+            while not self.dealer.stand:
+                if self.dealer.points[0] > 21 and self.dealer.points[1] > 21:
+                    return self.win()
+                elif self.dealer.points[0] > 16 or (self.dealer.points[1] > 16 and self.dealer.points[1] < 22):
+                    self.dealer.stand = True
+                else:
+                    self.hit(self.dealer)
+
+        # Порівняння очок
+        player_points = self.player.points[1] if self.player.points[1] < 22 else self.player.points[0]
+        dealer_points = self.dealer.points[1] if self.dealer.points[1] < 22 else self.dealer.points[0]
+        if player_points > dealer_points or dealer_points > 21:
+            return self.win()
+        elif player_points < dealer_points and dealer_points < 22:
+            return self.busted()
+        else:
+            return self.draw()
 
     def play_one_game(self):
         #Роздача карт і перевірка на блекджек
@@ -178,7 +240,7 @@ class Table:
         card_index_2 = SAMPLE_DECK.index(self.player.hand[1])
         action = self.player.genome.start_layer[card_index_1][card_index_2]
         self.make_choice(action)
-        print(action)
+        self.show_choice(action)
 
         # Перевірка по другому рівню хромосом
         while not self.player.stand:
@@ -194,7 +256,7 @@ class Table:
             #Прийняття рішення
             card_index_3 = self.player.points[point_index]
             action = self.player.genome.second_layer[card_index_3 - 1]
-            print(action)
+            self.show_choice(action)
             self.make_choice(action)
             if self.player.points[0] > 21 and self.player.points[1] > 21:
                 return self.busted()
@@ -205,6 +267,7 @@ class Table:
             return self.busted()
 
         #Хід дилера
+        self.dealer.made_turn = True
         while not self.dealer.stand:
             if self.dealer.points[0] > 21 and self.dealer.points[1] > 21:
                 return self.win()
@@ -227,13 +290,42 @@ class Table:
 
 
 
+class Population():
+    def __init__(self):
+        self.players = [Player() for i in range(POPULATION_SIZE)]
 
-tb = Table()
-print(tb.player.money)
-tb.play_one_game()
-print(f"player{tb.player.hand, tb.player.points}")
-print(f"dealer{tb.dealer.hand, tb.dealer.points}")
-print(tb.player.money)
+    def test_player(self, person):
+        table = Table()
+        table.player = person
+        for i in range(GAMES_TO_PLAY):
+            print(f"Player {self.players.index(table.player)+1}, Game {i+1}")
+            table.play_one_game()
+            # print(f"player{table.player.hand, table.player.points}")
+            # print(f"dealer{table.dealer.hand, table.dealer.points}")
+            if table.splitted:
+                # print('split hand')
+                table.play_split_game()
+                # print(f"player{table.player.hand, table.player.points}")
+                # print(f"dealer{table.dealer.hand, table.dealer.points}")
+            # print(f"Money: {table.player.money}")
+            print("----------------------------")
+
+
+pop = Population()
+pop.test_player(pop.players[0])
+
+
+# tb = Table()
+# print(tb.player.money)
+# tb.play_one_game()
+# print(f"player{tb.player.hand, tb.player.points}")
+# print(f"dealer{tb.dealer.hand, tb.dealer.points}")
+# if tb.splitted:
+#     print('split hand')
+#     tb.play_split_game()
+#     print(f"player{tb.player.hand, tb.player.points}")
+#     print(f"dealer{tb.dealer.hand, tb.dealer.points}")
+# print(tb.player.money)
 
 
 
