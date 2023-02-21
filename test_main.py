@@ -141,11 +141,23 @@ class Table:
         elif action == 5:
             print('split')
 
+    def win(self):
+        self.player.money += self.player_bet * 2
+
+    def busted(self):
+        pass
+
+    def blackjack(self):
+        self.player.money += self.player_bet / 2 * 3
+
+    def draw(self):
+        self.player.money += self.player_bet
+
     def play_one_game(self):
         #Роздача карт і перевірка на блекджек
         self.deal_cards()
         if self.check_if_blackjack():
-            return 'blackjack'
+            return self.blackjack()
 
         #Перевірка по першому рівню хромосом
         card_index_1 = SAMPLE_DECK.index(self.player.hand[0])
@@ -161,7 +173,7 @@ class Table:
             else:
                 point_index = self.points.index(min(self.points))
                 if self.player.hand[point_index] > 21:
-                    return 'Busted'
+                    return self.busted()
 
             #Прийняття рішення
             card_index_3 = self.count_points(self.player)
@@ -171,11 +183,21 @@ class Table:
         #Хід дилера
         while not self.dealer.stand:
             if self.dealer.points[0] > 21 and self.dealer.points[1] > 21:
-                return 'Win'
+                return self.win()
             elif self.dealer.points[0] > 16 or self.dealer.points[1] > 16:
                 self.dealer.stand = True
             elif self.dealer.points[0] < 17 or self.dealer.points[1] < 17:
                 self.hit(dealer)
+
+        #Порівняння очок
+        player_points = self.player.hand[1] if self.player.hand[1] < 22 else self.player.hand[0]
+        dealer_points = self.dealer.hand[1] if self.dealer.hand[1] < 22 else self.dealer.hand[0]
+        if player_points > dealer_points:
+            return self.win()
+        elif player_points < dealer_points:
+            return self.busted()
+        else:
+            return self.draw()
 
 
 
