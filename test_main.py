@@ -2,6 +2,8 @@ import random as r
 
 import genetic
 
+f = open('results.txt', 'a')
+
 POPULATION_SIZE = 10
 GAMES_TO_PLAY = 10
 BET_AMOUNT = 10
@@ -79,7 +81,8 @@ class Table:
             self.dealer.hand.append(self.deck.pop(r.randint(0, len(self.deck)-1)))
         self.count_points(self.player)
         self.count_points(self.dealer)
-        print(self.player.hand)
+        f.write(str(self.player.hand))
+        f.write('\n')
 
     def count_points(self, person):
         person.points = [0, 0]
@@ -99,7 +102,7 @@ class Table:
                 person.points[1] += int(card)
 
     def hit(self, person):
-        person.hand.append(self.deck.pop(r.randint(0, len(self.deck))))
+        person.hand.append(self.deck.pop(r.randint(0, len(self.deck)-1)))
         self.count_points(person)
 
     def double_down(self):
@@ -145,37 +148,47 @@ class Table:
     def show_choice(self, action):
         """pass"""
         if action == 1:
-            print('player hits')
+            f.write('player hits')
+            f.write('\n')
         elif action == 2:
-            print('player stands')
+            f.write('player stands')
+            f.write('\n')
         elif action == 3:
-            print('player doubling down')
+            f.write('player doubling down')
+            f.write('\n')
         elif action == 4:
-            print('player surrenders')
+            f.write('player surrenders')
+            f.write('\n')
         elif action == 5:
-            print('player splits')
+            f.write('player splits')
+            f.write('\n')
 
     def win(self):
         self.player.money += self.player_bet * 2
-        print('win')
+        f.write('win')
+        f.write('\n')
 
     def busted(self):
-        print('busted')
+        f.write('busted')
+        f.write('\n')
 
     def blackjack(self):
         self.player.money += self.player_bet
         self.player.money += self.player_bet / 2 * 3
-        print('blackjack')
+        f.write('blackjack')
+        f.write('\n')
 
     def draw(self):
         if not self.splitted:
             self.player.money += self.player_bet
         else:
             self.player.money += self.player_bet / 2
-        print('draw')
+        f.write('draw')
+        f.write('\n')
 
     def sur(self):
-        print('surrender')
+        f.write('surrender')
+        f.write('\n')
 
 
 
@@ -298,21 +311,25 @@ class Population():
         table = Table()
         table.player = person
         for i in range(GAMES_TO_PLAY):
-            print(f"Player {self.players.index(table.player)+1}, Game {i+1}")
+            f.write(f"Player {self.players.index(table.player)+1}, Game {i+1}\n")
             table.play_one_game()
-            # print(f"player{table.player.hand, table.player.points}")
-            # print(f"dealer{table.dealer.hand, table.dealer.points}")
+            f.write(f"player{table.player.hand, table.player.points}\n")
+            f.write(f"dealer{table.dealer.hand, table.dealer.points}\n")
             if table.splitted:
-                # print('split hand')
+                f.write('split hand')
+                f.write('\n')
                 table.play_split_game()
-                # print(f"player{table.player.hand, table.player.points}")
-                # print(f"dealer{table.dealer.hand, table.dealer.points}")
-            # print(f"Money: {table.player.money}")
-            print("----------------------------")
+                f.write(f"player{table.player.hand, table.player.points}\n")
+                f.write(f"dealer{table.dealer.hand, table.dealer.points}\n")
+            f.write(f"Money: {table.player.money}\n")
+            f.write("----------------------------")
+            f.write('\n')
 
 
 pop = Population()
-pop.test_player(pop.players[0])
+for i in range(POPULATION_SIZE):
+    pop.test_player(pop.players[i])
+    f.write('~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n')
 
 
 # tb = Table()
