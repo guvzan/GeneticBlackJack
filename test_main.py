@@ -213,7 +213,8 @@ class Table:
 
             # Прийняття рішення
             card_index_3 = self.player.points[point_index]
-            action = self.player.genome.second_layer[card_index_3 - 1]
+            dealer_card_index = SAMPLE_DECK.index(self.dealer.hand[0])
+            action = self.player.genome.second_layer[dealer_card_index][card_index_3 - 1]
             self.show_choice(action)
             self.make_choice(action)
             if self.player.points[0] > 21 and self.player.points[1] > 21:
@@ -271,7 +272,8 @@ class Table:
 
             #Прийняття рішення
             card_index_3 = self.player.points[point_index]
-            action = self.player.genome.second_layer[card_index_3 - 1]
+            dealer_card_index = SAMPLE_DECK.index(self.dealer.hand[0])
+            action = self.player.genome.second_layer[dealer_card_index][card_index_3 - 1]
             self.show_choice(action)
             self.make_choice(action)
             if self.player.points[0] > 21 and self.player.points[1] > 21:
