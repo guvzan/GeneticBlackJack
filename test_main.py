@@ -164,7 +164,10 @@ class Table:
             f.write('\n')
 
     def win(self):
-        self.player.money += self.player_bet * 2
+        if not self.splitted:
+            self.player.money += self.player_bet * 2
+        else:
+            self.player.money += self.player_bet
         f.write('win')
         f.write('\n')
 
@@ -330,6 +333,8 @@ pop = Population()
 for i in range(POPULATION_SIZE):
     pop.test_player(pop.players[i])
     f.write('~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n')
+for i in pop.players:
+    print(i.money)
 
 
 # tb = Table()
