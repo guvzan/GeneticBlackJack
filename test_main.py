@@ -10,7 +10,7 @@ GENERATIONS_NEEDED = 100
 CROSSING_CHANCE = 0.9
 MUTATION_CHANCE = 0.1
 POPULATION_SIZE = 50
-GAMES_TO_PLAY = 20
+GAMES_TO_PLAY = 100
 BET_AMOUNT = 10
 SAMPLE_DECK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K']
 
@@ -71,6 +71,26 @@ class Table:
         self.dealer_busted = False
 
     def deal_cards(self):
+        if len(self.deck) < 15:
+            self.deck = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',
+                         'A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K',]
         self.player.hand = []
         self.dealer.hand = []
         self.player.money -= BET_AMOUNT
@@ -400,7 +420,15 @@ class Population():
             for p in range(POPULATION_SIZE):
                 self.test_player(self.players[p])
                 f.write('~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n')
-            self.list_of_best.append(max(self.players, key=lambda playa: playa.money).money)
+            best_playa = max(self.players, key=lambda playa: playa.money)
+
+            if best_playa.money >= 100:
+                print(f"\nAt generation {i} with {best_playa.money} money")
+                best_playa.genome.show_start_gene()
+                print()
+                best_playa.genome.show_second_layer()
+
+            self.list_of_best.append(best_playa.money)
             for p in self.players:
                 buffer.append(p.money)
             self.list_of_mean.append(sum(buffer) / POPULATION_SIZE)

@@ -12,7 +12,7 @@ class Chromosome:
         """pass"""
         for row in self.second_layer:
             for i in row:
-                print(i, end='')
+                print(i, end=' ')
             print()
 
 
@@ -20,7 +20,7 @@ class Chromosome:
         """pass"""
         for row in self.start_layer:
             for i in row:
-                print(i, end='')
+                print(i, end=' ')
             print()
 
     def start_layer_corrections(self):
