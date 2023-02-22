@@ -6,7 +6,7 @@ import genetic
 
 f = open('results.txt', 'a')
 
-GENERATIONS_NEEDED = 100
+GENERATIONS_NEEDED = 10000
 CROSSING_CHANCE = 0.9
 MUTATION_CHANCE = 0.1
 POPULATION_SIZE = 50
@@ -423,7 +423,7 @@ class Population():
             best_playa = max(self.players, key=lambda playa: playa.money)
 
             if best_playa.money >= 100:
-                print(f"\nAt generation {i} with {best_playa.money} money")
+                print(f"\nAt generation {i} player #{self.players.index(best_playa)+1} with {best_playa.money} money")
                 best_playa.genome.show_start_gene()
                 print()
                 best_playa.genome.show_second_layer()
