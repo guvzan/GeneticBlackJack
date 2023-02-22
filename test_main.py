@@ -1,11 +1,16 @@
+import matplotlib.pyplot as plt
 import random as r
+import copy as c
 
 import genetic
 
 f = open('results.txt', 'a')
 
-POPULATION_SIZE = 10
-GAMES_TO_PLAY = 10
+GENERATIONS_NEEDED = 100
+CROSSING_CHANCE = 0.9
+MUTATION_CHANCE = 0.1
+POPULATION_SIZE = 50
+GAMES_TO_PLAY = 20
 BET_AMOUNT = 10
 SAMPLE_DECK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K']
 
@@ -311,6 +316,8 @@ class Table:
 class Population():
     def __init__(self):
         self.players = [Player() for i in range(POPULATION_SIZE)]
+        self.list_of_best = []
+        self.list_of_mean = []
 
     def test_player(self, person):
         table = Table()
@@ -330,13 +337,98 @@ class Population():
             f.write("----------------------------")
             f.write('\n')
 
+    def tournament(self):
+        best_players = []
+        for i in range(POPULATION_SIZE):
+            a1 = a2 = a3 = 0
+            while a1 == a2 or a1 == a3 or a2 == a3:
+                a1, a2, a3 = r.randint(0, POPULATION_SIZE-1), r.randint(0, POPULATION_SIZE-1), r.randint(0, POPULATION_SIZE-1)
+            best = max(self.players[a1], self.players[a2], self.players[a3], key=lambda player: player.money)
+            best_players.append(c.deepcopy(best))
+        self.players = best_players
+
+    def cross_two_players(self, list, pl1, pl2):
+        start_layer_map = [[r.randint(0, 1) for i in range(13)] for j in range(13)]
+        second_layer_map = [[r.randint(0, 1) for i in range(21)] for j in range(13)]
+
+        #Схрещення першого слоя
+        for i in range(13):
+            for j in range(13):
+                if start_layer_map[i][j] == 1:
+                    pl1.genome.start_layer[i][j], pl2.genome.start_layer[i][j] = pl2.genome.start_layer[i][j], pl1.genome.start_layer[i][j]
+
+        # Схрещення другого слоя
+        for i in range(13):
+            for j in range(21):
+                if second_layer_map[i][j] == 1:
+                    pl1.genome.second_layer[i][j], pl2.genome.second_layer[i][j] = pl2.genome.second_layer[i][j], pl1.genome.second_layer[i][j]
+
+        #Додання потомків у список
+        list.append(pl1)
+        list.append(pl2)
+
+
+
+    def crossing(self):
+        new_players = []
+        for i in range(0, POPULATION_SIZE, 2):
+            if r.random() <= CROSSING_CHANCE:
+                self.cross_two_players(new_players, self.players[i], self.players[i+1])
+            else:
+                new_players.append(self.players[i])
+                new_players.append(self.players[i+1])
+        print(len(new_players))
+        self.players = new_players
+
+    def mutate(self):
+        for player in self.players:
+            if r.random() <= MUTATION_CHANCE:
+                first_row = r.randint(0, 12)
+                first_col = r.randint(0, 12)
+                second_row = r.randint(0, 12)
+                second_col = r.randint(0, 20)
+                if first_row == first_col:
+                    player.genome.start_layer[first_row][first_col] = r.randint(1, 5)
+                else:
+                    player.genome.start_layer[first_row][first_col] = r.randint(1, 4)
+                player.genome.second_layer[second_row][second_col] = 1 if player.genome.second_layer[second_row][second_col] == 2 else 2
+
+    def start_project(self):
+        for i in range(GENERATIONS_NEEDED):
+            buffer = []
+            f.write(f"Generation {i}")
+            for p in range(POPULATION_SIZE):
+                self.test_player(self.players[p])
+                f.write('~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n')
+            self.list_of_best.append(max(self.players, key=lambda playa: playa.money).money)
+            for p in self.players:
+                buffer.append(p.money)
+            self.list_of_mean.append(sum(buffer) / POPULATION_SIZE)
+            self.tournament()
+            self.mutate()
+            self.resume_money()
+
+        # Графік
+        fig, ax = plt.subplots()
+        plt.plot(self.list_of_best, color="red")
+        plt.plot(self.list_of_mean, color="green")
+        plt.show()
+
+    def resume_money(self):
+        for player in self.players:
+            player.money = 100
+
+
+
 
 pop = Population()
-for i in range(POPULATION_SIZE):
-    pop.test_player(pop.players[i])
-    f.write('~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n')
-for i in pop.players:
-    print(i.money)
+pop.start_project()
+f.close()
+# for i in range(POPULATION_SIZE):
+#     pop.test_player(pop.players[i])
+#     f.write('~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n~~~~~~~~~~~~~~\n')
+# for i in pop.players:
+#     print(i.money)
 
 
 # tb = Table()
